@@ -1,5 +1,5 @@
 %% Function to get ellipsoidal approximation of uncertainty for a starting point x_0
-%     Monimoy Bujarbaruah. 
+%  Monimoy Bujarbaruah. 
 
 function [pd,qd,flag]  = elld4xpoint(x_0,xprev,dprev,Ld)
     % inputs: initial state x_0, L_d and recorded data
@@ -9,7 +9,7 @@ function [pd,qd,flag]  = elld4xpoint(x_0,xprev,dprev,Ld)
     % output is uncertainty ellipse parameters c and R^-1
     % uncertainty ellipse: (y-pd)^T qd^-1 (y-pd) <= 1
 
-    % Form the SDP to be solved for getting d bound (ACC SysID paper: Appendix)
+    % Form the SDP to be solved for getting d bound (See the Appendix of the paper https://ieeexplore.ieee.org/document/9143777)
     
     n = size(xprev,1);
     tau = sdpvar(size(xprev,2),1); 

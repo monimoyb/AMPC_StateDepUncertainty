@@ -1,6 +1,6 @@
-%% Robust Adaptive MPC with State-Dependent Uncertainty
-%     This will print out the results of the paper https://ieeexplore.ieee.org/document/9143777
-%     By: Monimoy Bujarbaruah
+%% Robust Adaptive MPC with State-Dependent Uncertainty: MAIN CODE
+%  This will print out the results of the paper https://ieeexplore.ieee.org/document/9143777
+%  By: Monimoy Bujarbaruah
 %% Flow: Get uncertainty bounds from any x_t
 %  elld4xpoint -> polOutEll -> robSucc (use for next rob succ) -> ellOutXpol -> elld4Xset -> polOutEll
 %  Repeat this along horizon 
@@ -11,8 +11,9 @@ close all
 clc
 warning off
 yalmip 'clear'
+
 %% All system parameters
-adap_flag = 1;                                                                   % should adapt or not?
+adap_flag = 1;                                                                       % should adapt or not?
 N = 3;                                                                               % MPC horizon length.
 [A,B,C,D,b,X,U,nx,nu,Ld,x_0,Xlb,Xub,Ulb,Uub] = sys_load(); 
 UA = U.A; Ub = U.b; 
@@ -22,15 +23,15 @@ Q =  10*eye(nx);
 R =   2*eye(nu);
 
 %%% Start condition here. This on, will go into data collected
-x_start = [1;1];                                     % Picking a starting condition
+x_start = [1;1];                             % Picking a starting condition
 d_start = true_uncert(x_start,Ld);           % Getting Ld value ;
 
 %%% Arrays will be built from here on 
-x_prev = x_start;                                  % start from x_start onward 
+x_prev = x_start;                            % start from x_start onward 
 d_prev = d_start; 
 
 %% Keep gathering data with rand inputs to get a non-empty terminal set 
-term_emptyFlag = 1;                         % Assume terminal set is empty!
+term_emptyFlag = 1;                          % Assume terminal set is empty!
 x_nxt = x_prev; 
 count = 0; 
 [pX, qX, flX]  =   ellOutXpol(X.A,X.b); 
@@ -64,6 +65,7 @@ end
 
 Xn0 = Xn; 
 dim_t = size(C,1)*N + size(Xn.A,1);                           
+
 %% Forming matrices appearing in the optimization problem 
 [capA, capE, capB, capC, capD, Aw_batch, Bu_batch, A_batch] = obtain_mat(A,B,C,D,Xn,nx,nu,N,dim_t);
 matF = capC*capB + capD; 
@@ -71,8 +73,9 @@ matG = capC*capE;
 matH = -capC*capA; 
 mat_c = [kron(ones(N,1),b); Xn.b];        
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %% START CONTROL PROCESS FROM HERE ON 
-simsteps = 10;                                                          % Number of steps in cl-loop
+simsteps = 10;                                                     % Number of steps in cl-loop
 options = sdpsettings('solver','gurobi','verbose',0);
 x_cl = zeros(nx,simsteps+1);
 u_cl = zeros(nu,simsteps);  
@@ -86,25 +89,24 @@ figure;
 
 for i=1:simsteps
 
-    if (mod(i,5)==0)                                              % Recompute only after certain intervals
+    if (mod(i,5)==0)                                              % Benefit of adaptation! Do after certain intervals
        
-       %% Calculating Terminal Set and terminal cost weight 
+      %%% Calculating Terminal Set and terminal cost weight 
        [pdX,qdX,~] =   elld4Xset(pX,qX,x_prev(:,1:end),d_prev(:,1:end), Ld);
        [WTermA, WTermb]  = polOutdEll(pdX,qdX); 
 
-       %%% Including intersection of previous polytope too
+      %%% Including intersection of previous polytope too
        WTerm = intersect(WTerm, Polyhedron('A',WTermA,'b',WTermb));
 
        [Xn,Pinf] = term_set(A,B,C,D,b,Q,R,U,WTerm,nx,nu); 
        dim_t = size(C,1)*N + size(Xn.A,1);                           
 
-        %% Forming matrices appearing in the optimization problem 
-        [capA, capE, capB, capC, capD, Aw_batch, Bu_batch, A_batch] = obtain_mat(A,B,C,D,Xn,nx,nu,N,dim_t);
-
-        matF = capC*capB + capD; 
-        matG = capC*capE; 
-        matH = -capC*capA; 
-        mat_c = [kron(ones(N,1),b); Xn.b]; 
+      %%% Forming matrices appearing in the optimization problem 
+      [capA, capE, capB, capC, capD, Aw_batch, Bu_batch, A_batch] = obtain_mat(A,B,C,D,Xn,nx,nu,N,dim_t);
+       matF = capC*capB + capD; 
+       matG = capC*capE; 
+       matH = -capC*capA; 
+       mat_c = [kron(ones(N,1),b); Xn.b]; 
 
     end
   
@@ -118,19 +120,18 @@ for i=1:simsteps
     Hs=[]; hs =[]; 
 
     for k = 1:N-1
-      % polytope bound of uncertainty 
+     % polytope bound of uncertainty 
       [d0A, d0b]  = polOutdEll(pd0,qd0); 
       polD = Polyhedron('A',d0A,'b',d0b);
       polIn = intersect(polD,polprev(k)); 
-
       d0A = polIn.A; d0b = polIn.b; 
-
       Hs = blkdiag(Hs, d0A); hs = [hs; d0b]; 
-      % computing succesor states
+     
+     % computing succesor states
       [XtA, Xtb] = robSucc(A,B,UA,Ub,XtA,Xtb,d0A,d0b,X.A,X.b); 
-      % outer ellipse to successor states
+     % outer ellipse to successor states
       [px, qx, ~] = ellOutXpol(XtA,Xtb); 
-      % obtaining uncertainty with successor outer ellipse 
+     % obtaining uncertainty with successor outer ellipse 
       [pd0,qd0,~] = elld4Xset(px,qx,x_prev(:,1:end),d_prev(:,1:end),Ld);
 
       if k ~=1
@@ -139,7 +140,7 @@ for i=1:simsteps
 
     end
 
-    % polytope bound of uncertainty 
+   % polytope bound of uncertainty 
     [d0A, d0b]  = polOutdEll(pd0,qd0); 
     polD = Polyhedron('A',d0A,'b',d0b);
     polIn = intersect(polD,polprev(N)); 
@@ -153,7 +154,7 @@ for i=1:simsteps
     dim_a = size(Hs,1);   % 'a' dimension from https://www.sciencedirect.com/science/article/pii/S0005109806000021 notations  
    
    %% Creating Open Loop Optimization Variables for MPC 
-    sl = sdpvar(size(matF,1),1);  % the slacks are small (~10^-6). This is for numerical reasons
+    sl = sdpvar(size(matF,1),1);      % the slacks are small (~10^-6). This is for numerical reasons
     Wsl = 10000;                      % high penalty on nonzero slacks
 
     % M and v are input decision variables
@@ -177,8 +178,7 @@ for i=1:simsteps
             cost_state = cost_state + x_pred'*Q*x_pred;
         end
     end
-    cost_state = cost_state + x_pred'*Pinf*x_pred + sl'*Wsl*sl;                
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+    cost_state = cost_state + x_pred'*Pinf*x_pred + sl'*Wsl*sl;                  
     constraints = [constraints; matF*v + Z'*hs <= mat_c + matH*x_cl(:,i) + sl];
     constraints = [constraints; Z>=0; sl>=0];
     constraints = [constraints, matF*M + matG == Z'*Hs];
@@ -188,7 +188,7 @@ for i=1:simsteps
     
     %% Obtaining Closed Loop Parameters 
     v_hor = double(v);
-    u_cl(:,i) = v_hor(1:nu,:);                % Closed loop control 
+    u_cl(:,i) = v_hor(1:nu,:);        % Closed loop control 
 
     %% Actual System Simulation in Closed Loop 
     w = true_uncert(x_cl(:,i),Ld);                      

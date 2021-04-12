@@ -15,7 +15,7 @@ function [px, qx, flag] = ellOutXpol(H,h)
 
     % Form the SDP to be solved
     Av = sdpvar(n,n);
-    bv = sdpvar(n,1);                      % decision variables
+    bv = sdpvar(n,1);                       % decision variables
 
     cost = -log(det(Av));
     constraints = Av>=0;
@@ -31,6 +31,6 @@ function [px, qx, flag] = ellOutXpol(H,h)
 
     A = double(Av); b = double(bv);
 
-    qx = A^2; px = A\b;                                                   % Book chapter 11.4.2.2
+    qx = A^2; px = A\b;                                                     % Book chapter 11.4.2.2
 
 end

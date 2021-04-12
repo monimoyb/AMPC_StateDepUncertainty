@@ -1,4 +1,4 @@
-%% Uncertainty function for true system 
+%% Uncertainty function for true system (L_d Lipschitz)
 %  Monimoy Bujarbaruah
 
 function val = true_uncert(x,Ld)

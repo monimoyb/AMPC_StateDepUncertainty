@@ -1,5 +1,6 @@
-    %% Forming Big Matrices for Robust Optimization (See https://www.sciencedirect.com/science/article/pii/S0005109806000021)
-    
+%% Forming Big Matrices for Robust Optimization (See https://www.sciencedirect.com/science/article/pii/S0005109806000021)
+% Monimoy Bujarbaruah
+
 function [capA, capE, capB, capC, capD, Aw_batch, Bu_batch, A_batch] = obtain_mat(A,B,C,D,Xn,nx,nu,N,dim_t) 
 
     capA = eye(nx);

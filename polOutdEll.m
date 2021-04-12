@@ -6,7 +6,7 @@ function [dpolA, dpolb] = polOutdEll(pd,qd)
 % output: its polytopic outer approximation
 
   [V,D] = eig(qd);                                  % sorted evals and evecs 
-  D = D*ones(size(D,1),1);                      % get a column vector     
+  D = D*ones(size(D,1),1);                          % get a column vector     
 
   % find semi major axis edge points
   unit_vecSemiMaj = V(:,1)/norm(V(:,1),2);
